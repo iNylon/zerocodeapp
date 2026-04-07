@@ -1,12 +1,21 @@
-FROM composer:2 AS laravel-builder
+FROM composer:2 AS composer-bin
+
+FROM php:8.3-cli AS laravel-builder
+
+COPY --from=composer-bin /usr/bin/composer /usr/bin/composer
 
 WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git \
+        unzip \
+        curl \
+        libzip-dev && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN composer create-project laravel/laravel:^10.0 /build/app --prefer-dist --no-interaction
 
 WORKDIR /build/app
-
-RUN composer config platform.php 8.3.30
 
 RUN composer require --no-interaction --no-scripts --ignore-platform-req=ext-opentelemetry \
     open-telemetry/sdk \
