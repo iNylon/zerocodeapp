@@ -6,7 +6,7 @@ RUN composer create-project laravel/laravel:^10.0 /build/app --prefer-dist --no-
 
 WORKDIR /build/app
 
-RUN composer require --no-interaction --ignore-platform-req=ext-opentelemetry \
+RUN composer require --no-interaction --no-scripts --ignore-platform-req=ext-opentelemetry \
     open-telemetry/sdk \
     open-telemetry/exporter-otlp \
     open-telemetry/opentelemetry-auto-laravel \
@@ -43,7 +43,8 @@ WORKDIR /app
 
 COPY --from=laravel-builder /build/app /app
 
-RUN mkdir -p /app/storage/framework/cache /app/storage/framework/sessions /app/storage/framework/views /app/storage/logs && \
+RUN php artisan package:discover --ansi && \
+    mkdir -p /app/storage/framework/cache /app/storage/framework/sessions /app/storage/framework/views /app/storage/logs && \
     chmod -R 777 /app/storage /app/bootstrap/cache
 
 EXPOSE 8080
