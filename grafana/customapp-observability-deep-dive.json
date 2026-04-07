@@ -1,0 +1,836 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_PROMETHEUS",
+      "label": "Prometheus / O2 API",
+      "description": "Select your Prometheus-compatible metrics datasource for CustomApp",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_OPENOBSERVE",
+      "label": "OpenObserve Logs",
+      "description": "Select your OpenObserve datasource for CustomApp logs",
+      "type": "datasource",
+      "pluginId": "openobserve",
+      "pluginName": "OpenObserve"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Metrics · Total Requests/sec",
+      "gridPos": { "x": 0, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(java_requests_total[$__rate_interval])) + sum(rate(node_requests_total[$__rate_interval])) + sum(rate(php_requests_total[$__rate_interval])) + sum(rate(python_requests_total[$__rate_interval]))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 25 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Metrics · Total Errors/sec",
+      "gridPos": { "x": 3, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(java_errors_total[$__rate_interval])) + sum(rate(node_errors_total[$__rate_interval])) + sum(rate(php_errors_total[$__rate_interval])) + sum(rate(python_errors_total[$__rate_interval]))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Metrics · Error Rate",
+      "gridPos": { "x": 6, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * ((sum(rate(java_errors_total[$__rate_interval])) + sum(rate(node_errors_total[$__rate_interval])) + sum(rate(php_errors_total[$__rate_interval])) + sum(rate(python_errors_total[$__rate_interval]))) / clamp_min(sum(rate(java_requests_total[$__rate_interval])) + sum(rate(node_requests_total[$__rate_interval])) + sum(rate(php_requests_total[$__rate_interval])) + sum(rate(python_requests_total[$__rate_interval])), 1e-9))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 15 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Metrics · OTLP Seen/sec",
+      "gridPos": { "x": 9, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(otlp_exporter_seen[$__rate_interval]))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Metrics · OTLP Exported/sec",
+      "gridPos": { "x": 12, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(otlp_exporter_exported[$__rate_interval]))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Metrics · Orders/sec",
+      "gridPos": { "x": 15, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(php_orders_total[$__rate_interval]))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Metrics · Revenue/sec",
+      "gridPos": { "x": 18, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(php_order_value_eur_sum[$__rate_interval]))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "currencyEUR" }, "overrides": [] },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Metrics · Auth Events/sec",
+      "gridPos": { "x": 21, "y": 0, "w": 3, "h": 4 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(php_auth_events_total[$__rate_interval]))",
+          "instant": true,
+          "range": true
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" }, "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Metrics · Requests/sec by Runtime",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(java_requests_total[$__rate_interval]))", "legendFormat": "Java" },
+        { "refId": "B", "expr": "sum(rate(node_requests_total[$__rate_interval]))", "legendFormat": "Node" },
+        { "refId": "C", "expr": "sum(rate(php_requests_total[$__rate_interval]))", "legendFormat": "PHP" },
+        { "refId": "D", "expr": "sum(rate(python_requests_total[$__rate_interval]))", "legendFormat": "Python" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Metrics · Errors/sec by Runtime",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(java_errors_total[$__rate_interval]))", "legendFormat": "Java" },
+        { "refId": "B", "expr": "sum(rate(node_errors_total[$__rate_interval]))", "legendFormat": "Node" },
+        { "refId": "C", "expr": "sum(rate(php_errors_total[$__rate_interval]))", "legendFormat": "PHP" },
+        { "refId": "D", "expr": "sum(rate(python_errors_total[$__rate_interval]))", "legendFormat": "Python" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Metrics · P95 Request Duration by Runtime",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(java_request_duration_ms_bucket[$__rate_interval])))", "legendFormat": "Java" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum by (le) (rate(node_request_duration_ms_bucket[$__rate_interval])))", "legendFormat": "Node" },
+        { "refId": "C", "expr": "histogram_quantile(0.95, sum by (le) (rate(php_request_duration_ms_bucket[$__rate_interval])))", "legendFormat": "PHP" },
+        { "refId": "D", "expr": "histogram_quantile(0.95, sum by (le) (rate(python_request_duration_ms_bucket[$__rate_interval])))", "legendFormat": "Python" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 12,
+      "type": "timeseries",
+      "title": "Metrics · Average Request Duration by Runtime",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(java_request_duration_ms_sum[$__rate_interval])) / clamp_min(sum(rate(java_request_duration_ms_count[$__rate_interval])), 1e-9)", "legendFormat": "Java" },
+        { "refId": "B", "expr": "sum(rate(node_request_duration_ms_sum[$__rate_interval])) / clamp_min(sum(rate(node_request_duration_ms_count[$__rate_interval])), 1e-9)", "legendFormat": "Node" },
+        { "refId": "C", "expr": "sum(rate(php_request_duration_ms_sum[$__rate_interval])) / clamp_min(sum(rate(php_request_duration_ms_count[$__rate_interval])), 1e-9)", "legendFormat": "PHP" },
+        { "refId": "D", "expr": "sum(rate(python_request_duration_ms_sum[$__rate_interval])) / clamp_min(sum(rate(python_request_duration_ms_count[$__rate_interval])), 1e-9)", "legendFormat": "Python" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Metrics · HTTP Server Duration / Throughput",
+      "gridPos": { "x": 0, "y": 20, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_duration_bucket[$__rate_interval])))", "legendFormat": "HTTP p95" },
+        { "refId": "B", "expr": "sum(rate(http_server_duration_sum[$__rate_interval])) / clamp_min(sum(rate(http_server_duration_count[$__rate_interval])), 1e-9)", "legendFormat": "HTTP avg" },
+        { "refId": "C", "expr": "sum(rate(http_server_duration_count[$__rate_interval]))", "legendFormat": "HTTP req/sec" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [{ "matcher": { "id": "byName", "options": "HTTP req/sec" }, "properties": [{ "id": "unit", "value": "reqps" }] }] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Metrics · OTLP Exporter Pipeline",
+      "gridPos": { "x": 8, "y": 20, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(otlp_exporter_seen[$__rate_interval]))", "legendFormat": "Seen/sec" },
+        { "refId": "B", "expr": "sum(rate(otlp_exporter_exported[$__rate_interval]))", "legendFormat": "Exported/sec" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Metrics · PHP Auth Events by Action / Result",
+      "gridPos": { "x": 16, "y": 20, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (action, result) (rate(php_auth_events_total[$__rate_interval]))",
+          "legendFormat": "{{action}} · {{result}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Metrics · Orders / Revenue / Order Value",
+      "gridPos": { "x": 0, "y": 28, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(php_orders_total[$__rate_interval]))", "legendFormat": "Orders/sec" },
+        { "refId": "B", "expr": "sum(rate(php_order_value_eur_sum[$__rate_interval]))", "legendFormat": "Revenue/sec" },
+        { "refId": "C", "expr": "sum(rate(php_order_value_eur_sum[$__rate_interval])) / clamp_min(sum(rate(php_order_value_eur_count[$__rate_interval])), 1e-9)", "legendFormat": "Avg order value" },
+        { "refId": "D", "expr": "max_over_time(php_order_value_eur_max[$__rate_interval])", "legendFormat": "Peak order value" },
+        { "refId": "E", "expr": "min_over_time(php_order_value_eur_min[$__rate_interval])", "legendFormat": "Min order value" }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "currencyEUR" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Orders/sec" },
+            "properties": [{ "id": "unit", "value": "ops" }]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Metrics · PHP Component Errors/sec",
+      "gridPos": { "x": 8, "y": 28, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (component) (rate(php_component_errors_total[$__rate_interval]))",
+          "legendFormat": "{{component}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "Metrics · PHP Component Error Duration P95",
+      "gridPos": { "x": 16, "y": 28, "w": 8, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le, component) (rate(php_component_error_duration_ms_bucket[$__rate_interval])))",
+          "legendFormat": "{{component}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Metrics · Request Status Mix by Runtime",
+      "gridPos": { "x": 0, "y": 36, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (status) (rate(php_requests_total[$__rate_interval]))", "legendFormat": "PHP {{status}}" },
+        { "refId": "B", "expr": "sum by (status) (rate(node_requests_total[$__rate_interval]))", "legendFormat": "Node {{status}}" },
+        { "refId": "C", "expr": "sum by (status) (rate(java_requests_total[$__rate_interval]))", "legendFormat": "Java {{status}}" },
+        { "refId": "D", "expr": "sum by (status) (rate(python_requests_total[$__rate_interval]))", "legendFormat": "Python {{status}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "Metrics · Runtime Min / Max Latency",
+      "gridPos": { "x": 12, "y": 36, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "max_over_time(java_request_duration_ms_max[$__rate_interval])", "legendFormat": "Java max" },
+        { "refId": "B", "expr": "max_over_time(node_request_duration_ms_max[$__rate_interval])", "legendFormat": "Node max" },
+        { "refId": "C", "expr": "max_over_time(php_request_duration_ms_max[$__rate_interval])", "legendFormat": "PHP max" },
+        { "refId": "D", "expr": "max_over_time(python_request_duration_ms_max[$__rate_interval])", "legendFormat": "Python max" },
+        { "refId": "E", "expr": "min_over_time(java_request_duration_ms_min[$__rate_interval])", "legendFormat": "Java min" },
+        { "refId": "F", "expr": "min_over_time(node_request_duration_ms_min[$__rate_interval])", "legendFormat": "Node min" },
+        { "refId": "G", "expr": "min_over_time(php_request_duration_ms_min[$__rate_interval])", "legendFormat": "PHP min" },
+        { "refId": "H", "expr": "min_over_time(python_request_duration_ms_min[$__rate_interval])", "legendFormat": "Python min" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 101,
+      "type": "stat",
+      "title": "Logs · Error Logs",
+      "gridPos": { "x": 0, "y": 44, "w": 6, "h": 4 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT count(*) AS value FROM poc_logs WHERE severity = 'ERROR'"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } }
+    },
+    {
+      "id": 102,
+      "type": "stat",
+      "title": "Logs · Avg Duration",
+      "gridPos": { "x": 6, "y": 44, "w": 6, "h": 4 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT avg(context_duration_ms) AS value FROM poc_logs WHERE context_duration_ms IS NOT NULL"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } }
+    },
+    {
+      "id": 103,
+      "type": "stat",
+      "title": "Logs · Keepalive Cycles",
+      "gridPos": { "x": 12, "y": 44, "w": 6, "h": 4 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT count(*) AS value FROM poc_logs WHERE message = 'dashboard keepalive cycle completed'"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } }
+    },
+    {
+      "id": 104,
+      "type": "stat",
+      "title": "Logs · Degraded Keepalive Cycles",
+      "gridPos": { "x": 18, "y": 44, "w": 6, "h": 4 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT count(*) AS value FROM poc_logs WHERE message = 'dashboard keepalive cycle completed' AND context_summary_degraded = true"
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } }
+    },
+    {
+      "id": 105,
+      "type": "timeseries",
+      "title": "Logs · Errors Over Time by Service",
+      "gridPos": { "x": 0, "y": 48, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT histogram(_timestamp,'30 second') AS time, service_name AS service, count(*) AS value FROM poc_logs WHERE severity = 'ERROR' GROUP BY time, service ORDER BY time"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 106,
+      "type": "timeseries",
+      "title": "Logs · Volume by Severity",
+      "gridPos": { "x": 12, "y": 48, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT histogram(_timestamp,'30 second') AS time, severity AS level, count(*) AS value FROM poc_logs GROUP BY time, level ORDER BY time"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 107,
+      "type": "timeseries",
+      "title": "Logs · Route Activity",
+      "gridPos": { "x": 0, "y": 56, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT histogram(_timestamp,'30 second') AS time, context_path AS route, count(*) AS value FROM poc_logs WHERE context_path IS NOT NULL GROUP BY time, route ORDER BY time"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 108,
+      "type": "timeseries",
+      "title": "Logs · Slow Requests by Service",
+      "gridPos": { "x": 12, "y": 56, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT histogram(_timestamp,'30 second') AS time, service_name AS service, avg(context_duration_ms) AS value FROM poc_logs WHERE context_duration_ms IS NOT NULL GROUP BY time, service ORDER BY time"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 109,
+      "type": "timeseries",
+      "title": "Logs · Checkout Value from Order Logs",
+      "gridPos": { "x": 0, "y": 64, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT histogram(_timestamp,'30 second') AS time, sum(context_total_amount) AS value FROM poc_logs WHERE message = 'Order created' GROUP BY time ORDER BY time"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "currencyEUR" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 110,
+      "type": "timeseries",
+      "title": "Logs · Fault Activity by Component",
+      "gridPos": { "x": 12, "y": 64, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT histogram(_timestamp,'30 second') AS time, context_component AS component, count(*) AS value FROM poc_logs WHERE message = 'Component probe failed' OR message = 'PHP fault triggered' GROUP BY time, component ORDER BY time"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 111,
+      "type": "table",
+      "title": "Logs · Latest Errors",
+      "gridPos": { "x": 0, "y": 72, "w": 12, "h": 10 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT _timestamp, service_name, severity, message, context_error, context_path, context_status, request_id, trace_id FROM poc_logs WHERE severity = 'ERROR' ORDER BY _timestamp DESC LIMIT 50"
+        }
+      ],
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 112,
+      "type": "table",
+      "title": "Logs · Latest Keepalive Cycles",
+      "gridPos": { "x": 12, "y": 72, "w": 12, "h": 10 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT _timestamp, service_name, context_cycle_id, context_summary_status, context_checkout_status, context_invalid_checkout_status, context_component_errors, context_order_total, context_recommendation_items FROM poc_logs WHERE message = 'dashboard keepalive cycle completed' ORDER BY _timestamp DESC LIMIT 50"
+        }
+      ],
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 113,
+      "type": "table",
+      "title": "Logs · Latest Request Failures",
+      "gridPos": { "x": 0, "y": 82, "w": 24, "h": 10 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT _timestamp, service_name, message, context_path, context_status, context_error_type, context_error, request_id, trace_id FROM poc_logs WHERE context_status >= 400 OR severity = 'ERROR' ORDER BY _timestamp DESC LIMIT 100"
+        }
+      ],
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Resources · CPU Usage Trend by Service",
+      "description": "Visualizes CPU usage trends per runtime over time.",
+      "gridPos": { "x": 0, "y": 92, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(java_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(java_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "Java" },
+        { "refId": "B", "expr": "sum(rate(node_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(node_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "Node" },
+        { "refId": "C", "expr": "sum(rate(php_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(php_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "PHP" },
+        { "refId": "D", "expr": "sum(rate(python_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(python_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "Python" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Resources · Memory Usage Trend by Service",
+      "description": "Visualizes memory usage trends per runtime over time.",
+      "gridPos": { "x": 12, "y": 92, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(java_process_memory_used_mb_sum[$__rate_interval])) / clamp_min(sum(rate(java_process_memory_used_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "Java used" },
+        { "refId": "B", "expr": "sum(rate(node_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(node_process_memory_rss_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "Node RSS" },
+        { "refId": "C", "expr": "sum(rate(php_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(php_process_memory_rss_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "PHP RSS" },
+        { "refId": "D", "expr": "sum(rate(python_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(python_process_memory_rss_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "Python RSS" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decmbytes" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 23,
+      "type": "timeseries",
+      "title": "Resources · CPU % by Scope",
+      "gridPos": { "x": 0, "y": 100, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum by (scope) (rate(java_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum by (scope) (rate(java_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "Java {{scope}}" },
+        { "refId": "B", "expr": "sum by (scope) (rate(node_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum by (scope) (rate(node_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "Node {{scope}}" },
+        { "refId": "C", "expr": "sum by (scope) (rate(php_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum by (scope) (rate(php_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "PHP {{scope}}" },
+        { "refId": "D", "expr": "sum by (scope) (rate(python_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum by (scope) (rate(python_process_cpu_percent_count[$__rate_interval])), 1e-9)", "legendFormat": "Python {{scope}}" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percent" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 24,
+      "type": "timeseries",
+      "title": "Resources · Memory Detail by Service",
+      "gridPos": { "x": 12, "y": 100, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(java_process_memory_committed_mb_sum[$__rate_interval])) / clamp_min(sum(rate(java_process_memory_committed_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "Java committed" },
+        { "refId": "B", "expr": "sum(rate(node_process_heap_used_mb_sum[$__rate_interval])) / clamp_min(sum(rate(node_process_heap_used_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "Node heap used" },
+        { "refId": "C", "expr": "sum(rate(php_process_memory_peak_mb_sum[$__rate_interval])) / clamp_min(sum(rate(php_process_memory_peak_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "PHP peak" },
+        { "refId": "D", "expr": "sum(rate(python_process_memory_virtual_mb_sum[$__rate_interval])) / clamp_min(sum(rate(python_process_memory_virtual_mb_count[$__rate_interval])), 1e-9)", "legendFormat": "Python virtual" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decmbytes" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 114,
+      "type": "timeseries",
+      "title": "Resources · Detected Resource Anomalies Over Time",
+      "description": "Shows logged resource-threshold anomalies over time by service.",
+      "gridPos": { "x": 0, "y": 108, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT histogram(_timestamp,'30 second') AS time, service_name AS service, count(*) AS value FROM poc_logs WHERE message LIKE '%resource threshold exceeded%' GROUP BY time, service ORDER BY time"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+    },
+    {
+      "id": 115,
+      "type": "table",
+      "title": "Resources · Latest Resource Anomaly Snapshots",
+      "description": "Lists the latest anomaly snapshots with CPU and memory context for audit/demo purposes.",
+      "gridPos": { "x": 12, "y": 108, "w": 12, "h": 8 },
+      "datasource": { "type": "openobserve", "uid": "${DS_OPENOBSERVE}" },
+      "targets": [
+        {
+          "refId": "A",
+          "stream": "poc_logs",
+          "organization": "3BTUvLGWaJI6cc5tC2JGlZTW1ea",
+          "sqlMode": true,
+          "displayMode": "auto",
+          "query": "SELECT _timestamp, service_name, message, context_scope, context_route, context_status, context_pid, context_cpu_percent, context_memory_rss_mb, context_memory_usage_mb, context_memory_used_mb, context_heap_used_mb FROM poc_logs WHERE message LIKE '%resource threshold exceeded%' ORDER BY _timestamp DESC LIMIT 100"
+        }
+      ],
+      "options": { "showHeader": true }
+    },
+    {
+      "id": 116,
+      "type": "timeseries",
+      "title": "Resources · CPU Deviation Above 1h Baseline",
+      "description": "Highlights CPU anomalies by showing how far usage rises above the rolling 1 hour baseline.",
+      "gridPos": { "x": 0, "y": 116, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "clamp_min((sum(rate(java_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(java_process_cpu_percent_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(java_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(java_process_cpu_percent_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "Java above baseline" },
+        { "refId": "B", "expr": "clamp_min((sum(rate(node_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(node_process_cpu_percent_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(node_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(node_process_cpu_percent_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "Node above baseline" },
+        { "refId": "C", "expr": "clamp_min((sum(rate(php_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(php_process_cpu_percent_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(php_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(php_process_cpu_percent_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "PHP above baseline" },
+        { "refId": "D", "expr": "clamp_min((sum(rate(python_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(python_process_cpu_percent_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(python_process_cpu_percent_sum[$__rate_interval])) / clamp_min(sum(rate(python_process_cpu_percent_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "Python above baseline" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 5 },
+              { "color": "red", "value": 15 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "id": 117,
+      "type": "timeseries",
+      "title": "Resources · Memory Deviation Above 1h Baseline",
+      "description": "Highlights memory anomalies by showing how far usage rises above the rolling 1 hour baseline.",
+      "gridPos": { "x": 12, "y": 116, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        { "refId": "A", "expr": "clamp_min((sum(rate(java_process_memory_used_mb_sum[$__rate_interval])) / clamp_min(sum(rate(java_process_memory_used_mb_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(java_process_memory_used_mb_sum[$__rate_interval])) / clamp_min(sum(rate(java_process_memory_used_mb_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "Java above baseline" },
+        { "refId": "B", "expr": "clamp_min((sum(rate(node_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(node_process_memory_rss_mb_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(node_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(node_process_memory_rss_mb_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "Node above baseline" },
+        { "refId": "C", "expr": "clamp_min((sum(rate(php_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(php_process_memory_rss_mb_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(php_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(php_process_memory_rss_mb_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "PHP above baseline" },
+        { "refId": "D", "expr": "clamp_min((sum(rate(python_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(python_process_memory_rss_mb_count[$__rate_interval])), 1e-9)) - avg_over_time((sum(rate(python_process_memory_rss_mb_sum[$__rate_interval])) / clamp_min(sum(rate(python_process_memory_rss_mb_count[$__rate_interval])), 1e-9))[1h:1m]), 0)", "legendFormat": "Python above baseline" }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 25 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 42,
+  "style": "dark",
+  "tags": [
+    "customapp",
+    "observability",
+    "logs",
+    "metrics",
+    "openobserve",
+    "prometheus",
+    "chaos",
+    "grafana"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "CustomApp - Observability Deep Dive",
+  "uid": "customapp-observability-deep-dive",
+  "version": 2,
+  "weekStart": ""
+}

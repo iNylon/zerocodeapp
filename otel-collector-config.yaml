@@ -1,0 +1,133 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+  filelog:
+    include:
+      - /var/telemetry-logs/*.log
+    start_at: end
+    include_file_path: true
+    operators:
+      - type: json_parser
+        parse_from: body
+        parse_to: attributes
+        timestamp:
+          parse_from: attributes.timestamp
+          layout: "%Y-%m-%dT%H:%M:%S.%fZ"
+        severity:
+          parse_from: attributes.severity
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+
+  # Traces:
+  # - Zet sampling_percentage op 100 voor maximale trace-intensiteit.
+  # - Verlaag naar bijvoorbeeld 25 of 10 om trace-volume centraal terug te brengen.
+  probabilistic_sampler/traces:
+    sampling_percentage: 100
+
+  # Logs:
+  # - Laat deze lijst leeg om alle logs door te laten.
+  # - Voeg regels toe om lagere severities of specifieke services te droppen.
+  filter/logs:
+    error_mode: ignore
+    logs:
+      log_record: []
+
+  # Metrics:
+  # - Gebruik metric-regels om ruisende metrics centraal te droppen.
+  # - Voorbeeld voor lichtere monitoring:
+  #   - 'name == "python_process_cpu_percent"'
+  #   - 'name == "node_process_heap_used_mb"'
+  filter/metrics:
+    error_mode: ignore
+    metrics:
+      metric: []
+
+  batch/traces:
+    send_batch_size: 1024
+    timeout: 2s
+
+  batch/metrics:
+    send_batch_size: 1024
+    timeout: 5s
+
+  batch/logs:
+    send_batch_size: 1024
+    timeout: 2s
+
+  resource/common:
+    attributes:
+      - key: deployment.environment
+        value: poc
+        action: upsert
+      - key: service.namespace
+        value: openobserve-poc
+        action: upsert
+
+exporters:
+  otlphttp/openobserve_traces:
+    endpoint: https://openobserve.dylanp.nl/api/3BTUvLGWaJI6cc5tC2JGlZTW1ea
+    headers:
+      Authorization: Basic a2xhbnRAa2xhbnQubmw6WVJ6YmlJSXVuMndIeUJYWQ==
+      stream-name: poc-traces
+
+  otlphttp/openobserve_metrics:
+    endpoint: https://openobserve.dylanp.nl/api/3BTUvLGWaJI6cc5tC2JGlZTW1ea
+    headers:
+      Authorization: Basic a2xhbnRAa2xhbnQubmw6WVJ6YmlJSXVuMndIeUJYWQ==
+      stream-name: poc-metrics
+
+  otlphttp/openobserve_logs:
+    endpoint: https://openobserve.dylanp.nl/api/3BTUvLGWaJI6cc5tC2JGlZTW1ea
+    headers:
+      Authorization: Basic a2xhbnRAa2xhbnQubmw6WVJ6YmlJSXVuMndIeUJYWQ==
+      stream-name: poc-logs
+
+extensions:
+  health_check:
+
+service:
+  telemetry:
+    logs:
+      level: info
+  extensions:
+    - health_check
+  pipelines:
+    traces:
+      receivers:
+        - otlp
+      processors:
+        - memory_limiter
+        - probabilistic_sampler/traces
+        - resource/common
+        - batch/traces
+      exporters:
+        - otlphttp/openobserve_traces
+
+    metrics:
+      receivers:
+        - otlp
+      processors:
+        - memory_limiter
+        - filter/metrics
+        - resource/common
+        - batch/metrics
+      exporters:
+        - otlphttp/openobserve_metrics
+
+    logs:
+      receivers:
+        - otlp
+        - filelog
+      processors:
+        - memory_limiter
+        - filter/logs
+        - resource/common
+        - batch/logs
+      exporters:
+        - otlphttp/openobserve_logs

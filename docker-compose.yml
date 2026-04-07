@@ -1,0 +1,220 @@
+services:
+  php-storefront:
+    build:
+      context: ./php-app
+    container_name: php-storefront
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./observability/otel-common.env
+      - ./observability/php.env
+    environment:
+      APP_NAME: ZeroCodeStorefront
+      APP_KEY: base64:7SCnY2Agh4/QUVZ09jVON1UQkgX5flY9fF1A91ScA6M=
+      APP_ENV: poc
+      APP_DEBUG: "false"
+      APP_URL: http://localhost:8080
+      APP_PORT: "8080"
+      APP_LOG_FILE: /var/telemetry-logs/php-storefront.log
+      LOG_CHANNEL: stderr
+      MYSQL_DSN: mysql:host=mysql;port=3306;dbname=catalog
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: catalog
+      DB_USERNAME: app
+      DB_PASSWORD: app
+      POSTGRES_DSN: pgsql:host=postgres;port=5432;dbname=recommendations
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      NODE_SERVICE_URL: http://node-catalog:3000
+      PYTHON_SERVICE_URL: http://python-recommendation:8000
+      JAVA_SERVICE_URL: http://java-checkout:8081
+      APP_DB_BOTTLENECK_MODE: "true"
+      APP_DB_BOTTLENECK_LOOPS: "12"
+      APP_REDIS_BOTTLENECK_LOOPS: "30"
+      APP_RESOURCE_WARN_CPU_PERCENT: "35"
+      APP_RESOURCE_WARN_MEMORY_MB: "180"
+    depends_on:
+      - mysql
+      - postgres
+      - redis
+      - node-catalog
+      - python-recommendation
+      - java-checkout
+      - otel-collector
+    volumes:
+      - telemetry-logs:/var/telemetry-logs
+
+  python-recommendation:
+    build:
+      context: ./python-service
+    container_name: python-recommendation
+    env_file:
+      - ./observability/otel-common.env
+      - ./observability/python.env
+    environment:
+      APP_SERVICE_NAME: python-recommendation
+      APP_PORT: "8000"
+      APP_LOG_FILE: /var/telemetry-logs/python-recommendation.log
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: recommendations
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      APP_DB_BOTTLENECK_MODE: "true"
+      APP_DB_BOTTLENECK_LOOPS: "14"
+      APP_SYNTHETIC_FAILURE_RATE_PERCENT: "28"
+      APP_METRIC_KEEPALIVE_ENABLED: "true"
+      APP_METRIC_KEEPALIVE_INTERVAL_SECONDS: "12"
+      APP_METRIC_KEEPALIVE_START_DELAY_SECONDS: "8"
+      APP_METRIC_KEEPALIVE_ROUNDS_PER_CYCLE: "2"
+      APP_METRIC_KEEPALIVE_BETWEEN_REQUESTS_MS: "120"
+      APP_RESOURCE_SAMPLE_INTERVAL_SECONDS: "10"
+      APP_RESOURCE_WARN_CPU_PERCENT: "35"
+      APP_RESOURCE_WARN_MEMORY_MB: "180"
+      PHP_STOREFRONT_URL: http://php-storefront:8080
+      NODE_SERVICE_URL: http://node-catalog:3000
+      JAVA_SERVICE_URL: http://java-checkout:8081
+    depends_on:
+      - postgres
+      - redis
+      - otel-collector
+    volumes:
+      - telemetry-logs:/var/telemetry-logs
+
+  node-catalog:
+    build:
+      context: ./node-service
+    container_name: node-catalog
+    env_file:
+      - ./observability/otel-common.env
+      - ./observability/node.env
+    environment:
+      APP_SERVICE_NAME: node-catalog
+      APP_PORT: "3000"
+      APP_LOG_FILE: /var/telemetry-logs/node-catalog.log
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: catalog
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      APP_DB_BOTTLENECK_MODE: "true"
+      APP_DB_BOTTLENECK_LOOPS: "16"
+      APP_SYNTHETIC_FAILURE_RATE_PERCENT: "24"
+      APP_SLOW_LOG_THRESHOLD_MS: "100"
+      APP_RESOURCE_SAMPLE_INTERVAL_MS: "10000"
+      APP_RESOURCE_WARN_CPU_PERCENT: "35"
+      APP_RESOURCE_WARN_MEMORY_MB: "180"
+    depends_on:
+      - mysql
+      - redis
+      - otel-collector
+    volumes:
+      - telemetry-logs:/var/telemetry-logs
+
+  java-checkout:
+    build:
+      context: ./java-service
+    container_name: java-checkout
+    env_file:
+      - ./observability/otel-common.env
+      - ./observability/java.env
+    environment:
+      APP_SERVICE_NAME: java-checkout
+      APP_PORT: "8081"
+      APP_LOG_FILE: /var/telemetry-logs/java-checkout.log
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      APP_SYNTHETIC_FAILURE_RATE_PERCENT: "24"
+      APP_SLOW_LOG_THRESHOLD_MS: "100"
+      APP_RESOURCE_SAMPLE_INTERVAL_MS: "10000"
+      APP_RESOURCE_WARN_CPU_PERCENT: "35"
+      APP_RESOURCE_WARN_MEMORY_MB: "180"
+    depends_on:
+      - redis
+      - otel-collector
+    volumes:
+      - telemetry-logs:/var/telemetry-logs
+
+  mysql:
+    image: mysql:8.4
+    container_name: poc-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: catalog
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  postgres:
+    image: postgres:16
+    container_name: poc-postgres
+    environment:
+      POSTGRES_DB: recommendations
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  redis:
+    image: redis:7
+    container_name: poc-redis
+    ports:
+      - "6379:6379"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.101.0
+    container_name: poc-otel-collector
+    command:
+      - --config=/etc/otelcol-contrib/config.yaml
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+      - telemetry-logs:/var/telemetry-logs:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "13133:13133"
+    depends_on:
+      - mysql
+      - postgres
+      - redis
+
+  load-generator:
+    build:
+      context: ./loadgen
+    container_name: poc-load-generator
+    environment:
+      TARGET_HOST: http://php-storefront:8080
+    ports:
+      - "8089:8089"
+    command:
+      - locust
+      - -f
+      - /app/locustfile.py
+      - --host
+      - http://php-storefront:8080
+      - --web-host
+      - 0.0.0.0
+    depends_on:
+      - php-storefront
+
+volumes:
+  mysql-data:
+  postgres-data:
+  telemetry-logs:
