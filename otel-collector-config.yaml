@@ -71,21 +71,21 @@ processors:
 
 exporters:
   otlphttp/openobserve_traces:
-    endpoint: https://openobserve.dylanp.nl/api/3BTUvLGWaJI6cc5tC2JGlZTW1ea
+    endpoint: https://openobserve.dylanp.nl/api/3C2APgko63MvOTXxugkxkeeZwmX
     headers:
-      Authorization: Basic a2xhbnRAa2xhbnQubmw6WVJ6YmlJSXVuMndIeUJYWQ==
+      Authorization: Basic ZC5wYW5uZWtvZWtAZXhvbmV0Lm5sOjdlTVI0QTB1aTg4S1dxYUY=
       stream-name: poc-traces
 
   otlphttp/openobserve_metrics:
-    endpoint: https://openobserve.dylanp.nl/api/3BTUvLGWaJI6cc5tC2JGlZTW1ea
+    endpoint: https://openobserve.dylanp.nl/api/3C2APgko63MvOTXxugkxkeeZwmX
     headers:
-      Authorization: Basic a2xhbnRAa2xhbnQubmw6WVJ6YmlJSXVuMndIeUJYWQ==
+      Authorization: Basic ZC5wYW5uZWtvZWtAZXhvbmV0Lm5sOjdlTVI0QTB1aTg4S1dxYUY=
       stream-name: poc-metrics
 
   otlphttp/openobserve_logs:
-    endpoint: https://openobserve.dylanp.nl/api/3BTUvLGWaJI6cc5tC2JGlZTW1ea
+    endpoint: https://openobserve.dylanp.nl/api/3C2APgko63MvOTXxugkxkeeZwmX
     headers:
-      Authorization: Basic a2xhbnRAa2xhbnQubmw6WVJ6YmlJSXVuMndIeUJYWQ==
+      Authorization: Basic ZC5wYW5uZWtvZWtAZXhvbmV0Lm5sOjdlTVI0QTB1aTg4S1dxYUY=
       stream-name: poc-logs
 
 extensions:
