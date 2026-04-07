@@ -6,7 +6,7 @@ RUN composer create-project laravel/laravel:^10.0 /build/app --prefer-dist --no-
 
 WORKDIR /build/app
 
-RUN composer require --no-interaction \
+RUN composer require --no-interaction --ignore-platform-req=ext-opentelemetry \
     open-telemetry/sdk \
     open-telemetry/exporter-otlp \
     open-telemetry/opentelemetry-auto-laravel \
