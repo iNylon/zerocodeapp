@@ -6,13 +6,15 @@ RUN composer create-project laravel/laravel:^10.0 /build/app --prefer-dist --no-
 
 WORKDIR /build/app
 
+RUN composer config platform.php 8.3.30
+
 RUN composer require --no-interaction --no-scripts --ignore-platform-req=ext-opentelemetry \
     open-telemetry/sdk \
     open-telemetry/exporter-otlp \
     open-telemetry/opentelemetry-auto-laravel \
     guzzlehttp/guzzle \
     nyholm/psr7 \
-    symfony/http-client
+    symfony/http-client:^7.0
 
 COPY laravel-overlay /build/overlay
 
