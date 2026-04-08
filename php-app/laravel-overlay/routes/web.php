@@ -13,6 +13,7 @@ Route::prefix('api')->group(function (): void {
     Route::post('/logout', [StorefrontController::class, 'logout']);
     Route::get('/me', [StorefrontController::class, 'me']);
     Route::get('/orders', [StorefrontController::class, 'orders']);
+    Route::get('/recommendations', [StorefrontController::class, 'recommendations']);
     Route::get('/summary', [StorefrontController::class, 'summary']);
     Route::post('/checkout', [StorefrontController::class, 'checkout']);
     Route::get('/error', [StorefrontController::class, 'error']);

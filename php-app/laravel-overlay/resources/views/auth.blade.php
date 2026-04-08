@@ -52,7 +52,12 @@
     const statusBox = document.getElementById('auth-status');
     function setStatus(message) { statusBox.textContent = message; }
     async function requestJson(path, method = 'GET', body) {
-      const response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      const response = await fetch(path, {
+        method,
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
+      });
       let payload = {};
       try { payload = await response.json(); } catch (_error) {}
       if (!response.ok) throw new Error(payload && payload.error ? payload.error : `Request failed (${response.status})`);

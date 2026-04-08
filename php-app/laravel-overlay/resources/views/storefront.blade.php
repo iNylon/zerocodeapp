@@ -13,6 +13,7 @@
     .grid,.fault-grid,.orders-list { display:grid; gap:10px; }
     .grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
     .fault-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recommendations-list { display:grid; gap:10px; }
     .sku,.section-box,.log { border:1px solid rgba(0,0,0,.08); border-radius:14px; padding:12px; background:#fff; }
     .sku img { width:100%; height:160px; object-fit:cover; border-radius:10px; }
     button,input,select { font: inherit; border-radius:10px; }
@@ -98,6 +99,12 @@
           <ul class="orders-list" id="orders"><li>Log in om je bestellingen te zien.</li></ul>
         </div>
 
+        <div class="section-box">
+          <p>Python aanbevelingen</p>
+          <p id="recommendations-meta">Aanbevelingen worden geladen.</p>
+          <div class="recommendations-list" id="recommendations"><div>Bezig met laden...</div></div>
+        </div>
+
         <div class="log" id="log">Start webshop-simulatie: voeg producten toe en rond een bestelling af.</div>
       </aside>
     </section>
@@ -118,6 +125,8 @@
     const cartBox = document.getElementById('cart');
     const ordersBox = document.getElementById('orders');
     const ordersMeta = document.getElementById('orders-meta');
+    const recommendationsBox = document.getElementById('recommendations');
+    const recommendationsMeta = document.getElementById('recommendations-meta');
     const logBox = document.getElementById('log');
     const heroUser = document.getElementById('hero-user');
     const authLink = document.getElementById('auth-link');
@@ -174,11 +183,30 @@
       });
     }
     async function requestJson(path, method = 'GET', body) {
-      const response = await fetch(path, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+      const response = await fetch(path, {
+        method,
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: body ? JSON.stringify(body) : undefined
+      });
       let payload = {};
       try { payload = await response.json(); } catch (_error) {}
       if (!response.ok) throw new Error(payload && payload.error ? payload.error : `Request failed (${response.status})`);
       return { payload, status: response.status };
+    }
+    function renderRecommendations(items) {
+      if (!items || !items.length) {
+        recommendationsMeta.textContent = 'Geen aanbevelingen beschikbaar.';
+        recommendationsBox.innerHTML = '<div>Geen aanbevelingen gevonden.</div>';
+        return;
+      }
+      recommendationsMeta.textContent = `${items.length} aanbevelingen vanuit de Python service.`;
+      recommendationsBox.innerHTML = items.map((item) => {
+        const product = products.find((productItem) => productItem.sku === item.sku);
+        const label = product ? product.name : item.sku;
+        const price = product ? `EUR ${euro(product.price)}` : 'Niet in catalogus';
+        return `<div class="order-card"><div class="row"><strong>${label}</strong><span>score ${Number(item.score || 0).toFixed(2)}</span></div><div>${item.sku} • ${item.tier || 'unknown'} • ${price}</div></div>`;
+      }).join('');
     }
     function renderOrders(orders) {
       if (!currentUser) { ordersMeta.textContent = 'Log in om je bestellingen te zien.'; ordersBox.innerHTML = '<li>Log in om je bestellingen te zien.</li>'; return; }
@@ -188,12 +216,23 @@
     }
     function applyAuthState(data) {
       if (!data || !data.authenticated || !data.user) {
-        currentUser = null; heroUser.textContent = 'Niet ingelogd'; authLink.hidden = false; logoutButton.hidden = true; checkoutButton.disabled = false; checkoutButton.title = 'Log in om je bestelling af te ronden'; renderOrders([]); return;
+        currentUser = null; heroUser.textContent = 'Niet ingelogd'; authLink.hidden = false; logoutButton.hidden = true; checkoutButton.disabled = true; checkoutButton.title = 'Log in om je bestelling af te ronden'; renderOrders([]); return;
       }
       currentUser = data.user; heroUser.textContent = `Ingelogd als ${data.user.email}`; authLink.hidden = true; logoutButton.hidden = false; checkoutButton.disabled = false; checkoutButton.title = '';
     }
     async function refreshAuthState() { try { const { payload } = await requestJson('/api/me'); applyAuthState(payload); } catch (error) { appendLog('auth:state-failed', { error: error.message }); } }
     async function refreshOrders() { if (!currentUser) { renderOrders([]); return; } try { const { payload } = await requestJson('/api/orders'); renderOrders(payload.orders || []); } catch (error) { appendLog('orders:load-failed', { error: error.message }); } }
+    async function refreshRecommendations() {
+      try {
+        const userId = currentUser && currentUser.id ? currentUser.id : 1;
+        const { payload } = await requestJson(`/api/recommendations?user_id=${encodeURIComponent(userId)}`);
+        renderRecommendations(payload.items || []);
+      } catch (error) {
+        recommendationsMeta.textContent = 'Python aanbevelingen konden niet geladen worden.';
+        recommendationsBox.innerHTML = '<div>De recommendation service reageerde niet.</div>';
+        appendLog('recommendations:load-failed', { error: error.message });
+      }
+    }
     async function triggerFault(target, button) { const original = button.innerHTML; button.disabled = true; try { const { payload } = await requestJson(`/api/fault/${target}`, 'POST'); appendLog('fault:triggered', payload); } catch (error) { appendLog('fault:trigger-failed', { target, error: error.message }); } finally { button.disabled = false; button.innerHTML = original; } }
     async function triggerAlert(button) { const original = button.innerHTML; button.disabled = true; try { const { payload } = await requestJson('/api/alert', 'POST'); appendLog('alert:triggered', payload); } catch (error) { appendLog('alert:trigger-failed', { error: error.message }); } finally { button.disabled = false; button.innerHTML = original; } }
     async function checkoutOrder() {
@@ -206,10 +245,10 @@
     checkoutButton.addEventListener('click', checkoutOrder);
     faultButtons.forEach((button) => button.addEventListener('click', () => triggerFault(button.getAttribute('data-fault'), button)));
     alertButton.addEventListener('click', () => triggerAlert(alertButton));
-    logoutButton.addEventListener('click', async () => { try { await requestJson('/api/logout', 'POST'); appendLog('auth:logout-success', {}); applyAuthState({ authenticated: false }); } catch (error) { appendLog('auth:logout-failed', { error: error.message }); } });
+    logoutButton.addEventListener('click', async () => { try { await requestJson('/api/logout', 'POST'); appendLog('auth:logout-success', {}); applyAuthState({ authenticated: false }); await refreshRecommendations(); } catch (error) { appendLog('auth:logout-failed', { error: error.message }); } });
     searchInput.addEventListener('input', renderGrid);
     categoryInput.addEventListener('change', renderGrid);
-    renderGrid(); renderCart(); refreshAuthState().then(() => refreshOrders());
+    renderGrid(); renderCart(); refreshAuthState().then(async () => { await refreshOrders(); await refreshRecommendations(); });
   </script>
 </body>
 </html>

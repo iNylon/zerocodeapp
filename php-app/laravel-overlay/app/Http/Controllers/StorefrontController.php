@@ -62,10 +62,12 @@ class StorefrontController extends Controller
             'password_hash' => Hash::make($password),
         ]);
 
+        $request->session()->regenerate();
         session(['user_id' => $userId, 'user_email' => $email]);
 
         return response()->json([
             'ok' => true,
+            'authenticated' => true,
             'user' => ['id' => $userId, 'email' => $email],
         ], 201);
     }
@@ -86,17 +88,21 @@ class StorefrontController extends Controller
             return response()->json(['error' => 'Onjuiste inloggegevens.'], 401);
         }
 
+        $request->session()->regenerate();
         session(['user_id' => (int) $user->id, 'user_email' => (string) $user->email]);
 
         return response()->json([
             'ok' => true,
+            'authenticated' => true,
             'user' => ['id' => (int) $user->id, 'email' => (string) $user->email],
         ]);
     }
 
-    public function logout(): JsonResponse
+    public function logout(Request $request): JsonResponse
     {
-        session()->forget(['user_id', 'user_email']);
+        $request->session()->forget(['user_id', 'user_email']);
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return response()->json(['ok' => true]);
     }
 
@@ -143,13 +149,39 @@ class StorefrontController extends Controller
         return response()->json(['orders' => $orders]);
     }
 
+    public function recommendations(Request $request): JsonResponse
+    {
+        $userId = max(1, (int) $request->query('user_id', session('user_id', 1)));
+        $payload = $this->fetchRecommendationsForUser($userId);
+
+        if (!($payload['ok'] ?? false)) {
+            return response()->json([
+                'ok' => false,
+                'items' => [],
+                'status' => (int) ($payload['status'] ?? 503),
+                'error' => (string) ($payload['error'] ?? 'Python recommendations unavailable'),
+            ], (int) ($payload['status'] ?? 503));
+        }
+
+        $recommendationPayload = $payload['payload'] ?? [];
+
+        return response()->json([
+            'ok' => true,
+            'items' => $recommendationPayload['items'] ?? [],
+            'service' => $recommendationPayload['service'] ?? 'python-recommendation',
+            'request_id' => $recommendationPayload['request_id'] ?? null,
+            'cache' => (bool) ($recommendationPayload['cache'] ?? false),
+        ]);
+    }
+
     public function summary(): JsonResponse
     {
+        $recommendationUserId = max(1, (int) session('user_id', 1));
         $mysql = $this->mysqlSummary();
         $postgres = $this->postgresSummary();
         $redis = $this->redisSummary();
         $catalog = $this->safeJson(env('NODE_SERVICE_URL', 'http://node-catalog:3000') . '/inventory');
-        $recommendations = $this->safeJson(env('PYTHON_SERVICE_URL', 'http://python-recommendation:8000') . '/recommendations?user_id=1');
+        $recommendations = $this->fetchRecommendationsForUser($recommendationUserId);
         $checkout = $this->safeJson(env('JAVA_SERVICE_URL', 'http://java-checkout:8081') . '/quote');
 
         return response()->json([
@@ -210,6 +242,8 @@ class StorefrontController extends Controller
         ]);
 
         return response()->json([
+            'ok' => true,
+            'order_total' => round($total, 2),
             'order' => [
                 'order_id' => $orderNumber,
                 'status' => 'confirmed',
@@ -323,6 +357,21 @@ class StorefrontController extends Controller
         } catch (Throwable $error) {
             return ['ok' => false, 'error' => $error->getMessage()];
         }
+    }
+
+    private function fetchRecommendationsForUser(int $userId): array
+    {
+        $payload = $this->safeJson(env('PYTHON_SERVICE_URL', 'http://python-recommendation:8000') . '/recommendations?user_id=' . $userId);
+
+        if (
+            $userId !== 1 &&
+            ($payload['ok'] ?? false) &&
+            empty(($payload['payload'] ?? [])['items'])
+        ) {
+            return $this->safeJson(env('PYTHON_SERVICE_URL', 'http://python-recommendation:8000') . '/recommendations?user_id=1');
+        }
+
+        return $payload;
     }
 
     private function triggerFault(string $target): array
